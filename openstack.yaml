@@ -1,0 +1,84 @@
+--
+
+- hosts: all
+  become: yes
+
+  tasks: 
+  - name: Install Chrony NTP
+    apt:
+     name: chrony
+     state: present
+
+  - name: Update NTP settings
+    lineinfile:
+     path: /etc/chrony/chrony.conf
+     regexp: '^pool '
+     line: "pool {{ item }}"
+     state: present
+    with_items:
+      - 2.ubuntu.pool.ntp.org
+      - 3.ubuntu.pool.ntp.org
+
+  - name: Add repository
+      apt_repository::
+        repo: "dep http://ubuntu-cloud.archive.canonical.com/ubuntu jammy-u
+        state: present
+
+  - name: Install prerequisites
+    apt: 
+     name:
+       - software-properties-common
+       - python3-pip
+       - python3-openstackclient
+     state: present
+
+  - name: Install MariaDB
+    apt:
+      name: mariadb-server
+      state: present
+
+  - name: Set MySQL root password securely
+    debconf:
+      name: mariadb-server
+      question: "mysql-server/root_password"
+      value: "zerofour2023"
+      vrtypw: "password"
+
+  - name: Enable MariaDB service
+     service:
+       name: mariadb
+       state: restarted
+       enabled: yes
+
+   - name: Install RabbitMQ
+     apt:
+       name: rabbitmq-server
+       state: present
+
+   - name: Install memcached
+     apt:
+       name: memcached
+       state: present
+
+   - name: Start memcached
+     service:
+       name: memcached
+       state: restarted
+       enabled: yes
+
+   - name: Install etcd
+     apt:
+       name: etcd
+       state: present
+
+   - name: Set up etcd
+     copy:
+       dest: /etc/default/etcd
+       content:
+
+   - name: Restart etcd service
+     service:
+       name: etcd
+       state: restarted
+       enabled: yes
+
